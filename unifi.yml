@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+  unifi:
+    image: jacobalberty/unifi:latest
+    networks:
+      - swarm-macvlan1
+      - traefik-public
+    environment:
+      TZ: "Europe/Copenhagen"
+      UNIFI_UID: 2000
+      UNIFI_GID: 2000
+      RUNAS_UID0: 'false'
+    volumes:
+      - /docker/unifi:/unifi
+    deploy:
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      labels:
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.protocol=https
+        - traefik.frontend.entryPoints=http,https
+        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+        - traefik.controller.port=8443
+        - traefik.controller.frontend.redirect.entryPoint=https
+        - traefik.controller.frontend.rule=Host:unifi.${BASE_HOST}
+        - traefik.hotspot.port=443
+        - traefik.hotspot.frontend.redirect.entryPoint=https
+        - traefik.hotspot.frontend.rule=Host:hotspot.${BASE_HOST}
+    ports:
+      - 8080:8080
+      - 3478:3478/udp
+      - 6789:6789
+      - 10001:10001/udp
+      - 1900:1900/udp            
+
+networks:
+  traefik-public:
+    external: true
+  swarm-macvlan1:
+    external: true

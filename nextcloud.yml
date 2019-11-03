@@ -1,0 +1,63 @@
+version: '3.3'
+
+networks:
+  traefik-public:
+    external: true
+  nextcloud:
+    
+volumes:
+  nextcloud:
+  db:
+
+services:
+  mariadb:
+    image: linuxserver/mariadb
+    volumes:
+      - /glusterfs/nextcloud-db:/config
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXT_CLOUD_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${NEXT_CLOUD_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=${NEXT_CLOUD_USER}
+    networks:
+      - nextcloud
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      replicas: 1
+
+  app:  
+    image: nextcloud
+    volumes:
+      - /glusterfs/nextcloud/:/var/www/html
+      - /mnt/data/nextcloud-data/:/data
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      replicas: 1
+      labels:
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.frontend.entryPoints=http,https
+        - traefik.frontend.redirect.entryPoint=https
+        - traefik.frontend.rule=Host:nextcloud.${BASE_HOST}
+        - traefik.frontend.headers.customResponseHeaders=Strict-Transport-Security:15552000
+        - traefik.protocol=http
+        - traefik.port=80
+    networks:
+      - traefik-public
+      - nextcloud
+    ports:
+      - 8484:80

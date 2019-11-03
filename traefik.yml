@@ -1,0 +1,60 @@
+version: '3.5'
+
+services:
+  traefik:
+    image: traefik:v1.7
+    command: >
+      --docker
+      --docker.swarmmode
+      --docker.watch
+      --docker.exposedbydefault=false
+      --docker.domain=${BASE_HOST}
+      --docker.network='traefik-public'
+      --entrypoints='Name:http Address::80 Redirect.EntryPoint:https'
+      --entrypoints='Name:https Address::443 TLS'
+      --acme
+      --acme.storage="acme.json"
+      --acme.email=${ACME_EMAIL}
+      --acme.entryPoint=https
+      --acme.httpChallenge.entryPoint=http
+      --acme.onhostrule=true
+      --acme.acmelogging=true
+      --accessLog
+      --api
+      --logLevel="DEBUG"
+      --insecureSkipVerify=true
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.mysensors == yes
+      labels:
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.frontend.rule=Host:traefik.${BASE_HOST}
+        - traefik.port=8080
+        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - 8383:8080
+    networks:
+      - traefik-public
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /docker/traefik/acme.json:/acme.json
+      
+networks:
+  traefik-public:
+    external: true

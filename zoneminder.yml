@@ -1,0 +1,76 @@
+version: '3.2'
+
+services:
+  db:
+    image: mysql/mysql-server:5.7
+    volumes:
+      - /mnt/sdd/zoneminder/mysql/data:/var/lib/mysql
+      - /mnt/sdd/zoneminder/mysql/conf:/etc/mysql:ro
+    environment:
+     - TZ=Europe/Copenhagen
+     - MYSQL_USER=zmuser
+     - MYSQL_PASSWORD=zmpass
+     - MYSQL_DATABASE=zm
+     - MYSQL_ROOT_PASSWORD=mysqlpsswd
+     - MYSQL_ROOT_HOST=%
+    networks:
+     - zoneminder    
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+      placement:
+        constraints:
+          - node.labels.storage==yes
+
+  web:
+    image: quantumobject/docker-zoneminder
+    networks:
+      - traefik-public
+      - zoneminder
+    ports:
+      - "8081:80" #So I can access it on internal network on a shared host
+    volumes:
+      - /var/empty
+      - /mnt/sdd/zoneminder/backups:/var/backups
+      - /mnt/sdd/zoneminder/cache:/var/cache/zoneminder
+      - type: tmpfs
+        target: /dev/shm
+    environment:
+     - TZ=Europe/Copenhagen
+       #     - VIRTUAL_HOST=zm.localhost, stream0.localhost
+       #     - SERVICE_PORTS="8081"
+       #     - ZM_SERVER_HOST=node.0
+     - ZM_DB_HOST=db
+
+    depends_on:
+      - db
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      replicas: 1
+      labels:
+        - traefik.frontend.rule=Host:zm.${BASE_HOST};PathPrefix:/zm
+        - traefik.port=80
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        - traefik.tags=traefik-public
+        - traefik.webservice.frontend.entryPoints=https
+        - traefik.frontend.auth.basic=${USER_ZONEMINDER}
+networks:
+  traefik-public:
+    external: true
+  zoneminder:
+  

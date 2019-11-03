@@ -1,0 +1,34 @@
+version: '3.3'
+
+services:
+  registry:
+    image: registry:latest
+    networks:
+      - traefik-public
+    volumes:
+      - registry-volume:/var/lib/registry
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints: 
+          - node.labels.storage==yes
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.frontend.entryPoints=http,https
+        - traefik.frontend.redirect.entryPoint=https
+        - traefik.frontend.rule=Host:registry.${BASE_HOST}
+        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+        - traefik.port=5000              
+networks:
+  traefik-public:
+    external: true
+
+volumes:
+  registry-volume:
+  
