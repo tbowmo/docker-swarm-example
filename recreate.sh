@@ -1,5 +1,9 @@
 #!/bin/bash
-export $(grep -v '^#' .env | xargs -d '\n')
+IFS='
+'
+export $(grep -v '^#' .env | xargs -0)
+IFS=' '
+
 echo - Initializing standard swarm setup for home automation
 docker swarm init
 TOKEN=`docker swarm join-token worker -q`
@@ -10,7 +14,8 @@ for host in $SWARM_WORKERS; do
 done
 
 echo - Creating swarm overlay networks
-for network in $OVERLAY_NETWORKS; do
+for network in traefik-public mqtt grafing; do
+	echo "creating network $network"
 	docker network create --driver=overlay --attachable $network
 done
 
