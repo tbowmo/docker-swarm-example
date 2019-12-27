@@ -14,13 +14,20 @@ services:
       replicas: 1
       labels:
         - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.frontend.rule=Host:portainer.${BASE_HOST}
-        - traefik.webservice.frontend.entryPoints=https
-        - traefik.port=9000
-        - traefik.tags=traefik-public
+        - "traefik.http.routers.portainer.rule=Host(`portainer.${BASE_HOST}`)"
+        - "traefik.http.routers.portainer.entrypoints=websecure"
+        - "traefik.http.routers.portainer.tls.certresolver=le"
+        - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+        - "traefik.http.services.portainer.loadbalancer.server.scheme=http"
+
+        # - traefik.enable=true
+        # - traefik.docker.network=traefik-public
+        # - traefik.redirectorservice.frontend.entryPoints=http
+        # - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # - traefik.frontend.rule=Host:portainer.${BASE_HOST}
+        # - traefik.webservice.frontend.entryPoints=https
+        # - traefik.port=9000
+        # - traefik.tags=traefik-public
     networks:
       - traefik-public
       - portainer_agent

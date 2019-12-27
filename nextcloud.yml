@@ -48,14 +48,20 @@ services:
           - node.labels.storage==yes
       replicas: 1
       labels:
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.frontend.entryPoints=http,https
-        - traefik.frontend.redirect.entryPoint=https
-        - traefik.frontend.rule=Host:nextcloud.${BASE_HOST}
-        - traefik.frontend.headers.customResponseHeaders=Strict-Transport-Security:15552000
-        - traefik.protocol=http
-        - traefik.port=80
+        - "traefik.http.routers.nextclout.rule=Host(`nextcloud.${BASE_HOST}`)"
+        - "traefik.http.routers.nextclout.entrypoints=websecure"
+        - "traefik.http.routers.nextclout.tls.certresolver=le"
+        - traefik.http.services.nextclout.loadbalancer.server.port=80
+
+        # - traefik.docker.network=traefik-public
+        # - traefik.enable=true
+        # - traefik.frontend.entryPoints=http,https
+        # - traefik.frontend.redirect.entryPoint=https
+        # - traefik.frontend.rule=Host:nextcloud.${BASE_HOST}
+        # - traefik.frontend.headers.customResponseHeaders=Strict-Transport-Security:15552000
+        # - traefik.protocol=http
+        # - traefik.port=80
     networks:
       - traefik-public
       - nextcloud

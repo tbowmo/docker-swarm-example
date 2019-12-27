@@ -60,15 +60,22 @@ services:
           - node.labels.storage==yes
       replicas: 1
       labels:
-        - traefik.frontend.rule=Host:zm.${BASE_HOST};PathPrefix:/zm
-        - traefik.port=80
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.tags=traefik-public
-        - traefik.webservice.frontend.entryPoints=https
-        - traefik.frontend.auth.basic=${USER_ZONEMINDER}
+        - "traefik.http.routers.zm.rule=Host(`zm.${BASE_HOST}`)"
+        - "traefik.http.routers.zm.entrypoints=websecure"
+        - "traefik.http.routers.zm.tls.certresolver=le"
+        - "traefik.http.services.zm.loadbalancer.server.port=80"
+        - "traefik.http.services.zm.loadbalancer.server.scheme=http"
+
+        # - traefik.frontend.rule=Host:zm.${BASE_HOST};PathPrefix:/zm
+        # - traefik.port=80
+        # - traefik.docker.network=traefik-public
+        # - traefik.enable=true
+        # - traefik.redirectorservice.frontend.entryPoints=http
+        # - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # - traefik.tags=traefik-public
+        # - traefik.webservice.frontend.entryPoints=https
+        # - traefik.frontend.auth.basic=${USER_ZONEMINDER}
 networks:
   traefik-public:
     external: true

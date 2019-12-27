@@ -6,18 +6,16 @@ services:
     command: >
       --entryPoints.web.address=:80
       --entryPoints.websecure.address=:443
-      --certificatesResolvers.sample.acme.email=${ACME_EMAIL}
-      --certificatesResolvers.sample.acme.storage=acme.json
-      --certificatesResolvers.sample.acme.httpChallenge.entryPoint=web
-
+      --certificatesResolvers.le.acme.email=${ACME_EMAIL}
+      --certificatesResolvers.le.acme.storage=acme.json
+      --certificatesResolvers.le.acme.httpChallenge.entryPoint=web
       --providers.docker.endpoint=unix:///var/run/docker.sock
       --providers.docker.swarmMode=true
       --providers.docker.exposedByDefault=false
       --providers.docker.network='traefik-public'
-      --api.dashboard=true
-      --accessLog
+      --api
       --log.level="DEBUG"
-      --api.insecure=true
+      --serverstransport.insecureskipverify
     deploy:
       restart_policy:
         condition: any
@@ -29,13 +27,24 @@ services:
           - node.role == manager
           - node.labels.mysensors == yes
       labels:
-        - traefik.http.routers.api.rule=Host(`traefik.juletraesfoden.dk`)
-        - traefik.http.routers.api.entrypoints=websecure
-        - traefik.http.routers.api.service=api@internal
-        - traefik.http.routers.api.middlewares=myAuth
-        - traefik.http.routers.api.sample
-        - traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.1.7
-        - traefik.http.middlewares.myAuth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/
+        - "traefik.enable=true"
+        # middleware redirect
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      
+        # global redirect to https
+        - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
+        - "traefik.http.routers.redirs.entrypoints=web"
+        - "traefik.http.routers.redirs.middlewares=redirect-to-https"
+
+        # Dashboard
+        - "traefik.http.routers.api.rule=Host(`traefik.juletraesfoden.dk`)"
+        - "traefik.http.routers.api.entrypoints=websecure"
+        - "traefik.http.routers.api.service=api@internal"
+        - "traefik.http.routers.api.middlewares=whitelist"
+        - "traefik.http.routers.api.tls.certresolver=le"
+        - traefik.http.services.api.loadbalancer.server.port=8080
+        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+        - "traefik.http.middlewares.myAuth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/"
     ports:
       - target: 80
         published: 80
@@ -49,8 +58,8 @@ services:
     networks:
       - traefik-public
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /docker/traefik/acme.json:/acme.json
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /docker/traefik/acme-v2.1.json:/acme.json
       
 networks:
   traefik-public:
