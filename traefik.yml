@@ -2,27 +2,22 @@ version: '3.5'
 
 services:
   traefik:
-    image: traefik:v1.7
+    image: traefik:v2.1
     command: >
-      --docker
-      --docker.swarmmode
-      --docker.watch
-      --docker.exposedbydefault=false
-      --docker.domain=${BASE_HOST}
-      --docker.network='traefik-public'
-      --entrypoints='Name:http Address::80 Redirect.EntryPoint:https'
-      --entrypoints='Name:https Address::443 TLS'
-      --acme
-      --acme.storage="acme.json"
-      --acme.email=${ACME_EMAIL}
-      --acme.entryPoint=https
-      --acme.httpChallenge.entryPoint=http
-      --acme.onhostrule=true
-      --acme.acmelogging=true
+      --entryPoints.web.address=:80
+      --entryPoints.websecure.address=:443
+      --certificatesResolvers.sample.acme.email=${ACME_EMAIL}
+      --certificatesResolvers.sample.acme.storage=acme.json
+      --certificatesResolvers.sample.acme.httpChallenge.entryPoint=web
+
+      --providers.docker.endpoint=unix:///var/run/docker.sock
+      --providers.docker.swarmMode=true
+      --providers.docker.exposedByDefault=false
+      --providers.docker.network='traefik-public'
+      --api.dashboard=true
       --accessLog
-      --api
-      --logLevel="DEBUG"
-      --insecureSkipVerify=true
+      --log.level="DEBUG"
+      --api.insecure=true
     deploy:
       restart_policy:
         condition: any
@@ -34,11 +29,13 @@ services:
           - node.role == manager
           - node.labels.mysensors == yes
       labels:
-        - traefik.docker.network=traefik-public
-        - traefik.enable=true
-        - traefik.frontend.rule=Host:traefik.${BASE_HOST}
-        - traefik.port=8080
-        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+        - traefik.http.routers.api.rule=Host(`traefik.juletraesfoden.dk`)
+        - traefik.http.routers.api.entrypoints=websecure
+        - traefik.http.routers.api.service=api@internal
+        - traefik.http.routers.api.middlewares=myAuth
+        - traefik.http.routers.api.sample
+        - traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.1.7
+        - traefik.http.middlewares.myAuth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/
     ports:
       - target: 80
         published: 80
