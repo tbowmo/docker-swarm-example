@@ -49,10 +49,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-
-#      placement:
-#        constraints:
-#          - node.labels.mysensors==yes
       replicas: 1
       labels:
         - traefik.frontend.rule=Host:mqtt.${BASE_HOST}
@@ -73,6 +69,54 @@ services:
     volumes:
       - /docker/mosquitto:/mosquitto
     image: "eclipse-mosquitto:1.6"
+
+  chromecompanion:
+    image: registry.${BASE_HOST}/chromecompanion:latest
+    volumes:
+      - /docker/chromecompanion:/xml
+    networks:
+      - mqtt
+      - traefik-public
+    command: -d --xmltv /xml -H mqtt --host https://chrome.${BASE_HOST}
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      replicas: 1
+      labels:
+        - traefik.frontend.rule=Host:chrome.${BASE_HOST}
+        - traefik.port=8181
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+        - traefik.tags=traefik-public
+        - traefik.webservice.frontend.entryPoints=https
+
+  dashboard:
+    image: registry.${BASE_HOST}/dashboard:latest
+    networks:
+      - traefik-public
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      replicas: 1
+      labels:
+        - traefik.docker.network=traefik-public
+        - traefik.enable=true
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
+        - traefik.tags=traefik-public
+        - traefik.webservice.frontend.entryPoints=https
+        - traefik.port=80
+        - traefik.frontend.rule=Host:dashboard.${BASE_HOST}
 
 ### Habridge, roku, and chromecast is moved to a rpi in IOT vlan, but kept here
 ### as a reference.
@@ -150,24 +194,3 @@ services:
 #         - traefik.port=8181
 #         - traefik.webservice.frontend.entryPoints=https
 #
-#   dashboard:
-#     image: registry.${BASE_HOST}/dashboard:latest
-#     networks:
-#       - traefik-public
-#     deploy:
-#       restart_policy:
-#         condition: any
-#         delay: 5s
-#         max_attempts: 3
-#         window: 120s
-#       replicas: 1
-#       labels:
-#         - traefik.docker.network=traefik-public
-#         - traefik.enable=true
-#         - traefik.redirectorservice.frontend.entryPoints=http
-#         - traefik.redirectorservice.frontend.redirect.entryPoint=https
-#         - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-#         - traefik.tags=traefik-public
-#         - traefik.webservice.frontend.entryPoints=https
-#         - traefik.port=80
-#         - traefik.frontend.rule=Host:dashboard.${BASE_HOST}

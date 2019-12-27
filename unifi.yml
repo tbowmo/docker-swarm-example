@@ -26,7 +26,7 @@ services:
         - traefik.controller.port=8443
         - traefik.controller.frontend.redirect.entryPoint=https
         - traefik.controller.frontend.rule=Host:unifi.${BASE_HOST}
-        - traefik.hotspot.port=443
+        - traefik.hotspot.port=8843
         - traefik.hotspot.frontend.redirect.entryPoint=https
         - traefik.hotspot.frontend.rule=Host:hotspot.${BASE_HOST}
     ports:

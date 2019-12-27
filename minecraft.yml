@@ -4,7 +4,7 @@ services:
   vanilla:
     image: itzg/minecraft-server
     ports:
-      - 25566:25565
+      - 25567:25565
     volumes:
       - /docker/minecraft-vanilla:/data
     deploy:
@@ -18,29 +18,47 @@ services:
       RCON_PORT: 25575
       VERISON: "LATEST"
       
-  snapshot:
-    image: itzg/minecraft-server
-    ports:
-      - 25567:25565
-    volumes:
-      - /docker/minecraft-snapshot:/data
-    deploy:
-      placement:
-        constraints:
-          - node.labels.storage==yes
-    environment:
-      EULA: "TRUE"
-      ENABLE_RCON: "true"
-      RCON_PASSWORD: "minecraft"
-      RCON_PORT: 25575
-      VERSION: "SNAPSHOT"
+#  snapshot:
+#    image: itzg/minecraft-server
+#    ports:
+#      - 25567:25565
+#    volumes:
+#      - /docker/minecraft-snapshot:/data
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#    environment:
+#      EULA: "TRUE"
+#      ENABLE_RCON: "true"
+#      RCON_PASSWORD: "minecraft"
+#      RCON_PORT: 25575
+#      VERSION: "SNAPSHOT"
       
-  forge:
+#  forge:
+#    image: itzg/minecraft-server
+#    ports:
+#      - 25568:25565
+#    volumes:
+#      - /docker/minecraft-forge:/data
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#    environment:
+#      EULA: "TRUE"
+#      ENABLE_RCON: "true"
+#      RCON_PASSWORD: "minecraft"
+#      RCON_PORT: 25575
+#      TYPE: "FORGE"
+#      VERSION: "LATEST"
+
+  pixelmon:
     image: itzg/minecraft-server
     ports:
       - 25565:25565
     volumes:
-      - /docker/minecraft-forge:/data
+      - /docker/minecraft-pixelmon:/data
     deploy:
       placement:
         constraints:
@@ -51,12 +69,46 @@ services:
       RCON_PASSWORD: "minecraft"
       RCON_PORT: 25575
       TYPE: "FORGE"
-      VERSION: "LATEST"
-      
-  rcon:
-    image: itzg/rcon
+      VERSION: "1.12.2"
+      MEMORY: 3G
+
+  pixelmon-ml:
+    image: itzg/minecraft-server
     ports:
-      - "4326:4326"
-      - "4327:4327"
+      - 25566:25565
     volumes:
-      - /docker/minecraft-rcon:/opt/rcon-web-admin/db"
+      - /docker/minecraft-pixelmon-ml:/data
+    deploy:
+      placement:
+        constraints:
+          - node.labels.storage==yes
+    environment:
+      EULA: "TRUE"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "minecraft"
+      RCON_PORT: 25575
+      TYPE: "FORGE"
+      VERSION: "1.12.2"
+      MEMORY: 2G
+
+#  pixelmon2:
+#    image: walthowd/pixelmon
+#    ports:
+#      - 25569:25565
+#    volumes:
+#      - /docker/minecraft-pixelmon2/ops/ops.json:/opt/minecraft/ops.json
+#      - /docker/minecraft-pixelmon2/server.properties:/opt/minecraft/server.properties
+#      - /docker/minecraft-pixelmon2/config:/opt/minecraft/config
+#      - /docker/minecraft-pixelmon2/world:/opt/minecraft/world
+#    restart: on-failure
+#    environment:
+#      MINECRAFT_DIR: /opt/minecraft      
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#  rcon:
+#    image: registry.juletraesfoden.dk/minecontrol:latest
+#    ports:
+#      - "8181:8181"
+
