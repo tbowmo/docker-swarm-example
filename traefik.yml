@@ -53,7 +53,7 @@ services:
       - traefik-public
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /docker/traefik/acme.json:/acme.json
+      - /docker/traefik/acme.json-v1.7:/acme.json
       
 networks:
   traefik-public:
