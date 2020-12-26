@@ -11,6 +11,8 @@ networks:
 
 services:
   nodered:
+    depends_on: 
+      - mqtt
     deploy:
       restart_policy:
         condition: any
@@ -23,16 +25,15 @@ services:
           - node.labels.storage==yes
       replicas: 1
       labels:
-        - traefik.frontend.rule=Host:node.${BASE_HOST}
-        - traefik.port=1880
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-        - traefik.tags=traefik-public
-        - traefik.webservice.frontend.entryPoints=https
-    image: "nodered/node-red"
+        - "traefik.http.routers.node.rule=Host(`node.${BASE_HOST}`)"
+        - "traefik.http.routers.node.entrypoints=websecure"
+        - "traefik.http.routers.node.tls.certresolver=le"
+        - "traefik.http.routers.node.middlewares=whitelist"
+        - "traefik.http.services.node.loadbalancer.server.port=1880"
+        - "traefik.http.services.node.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+    image: "nodered/node-red:1.1.2"
     volumes:
       - /docker/nodered:/data
       - /etc/localtime:/etc/localtime:ro
@@ -51,15 +52,14 @@ services:
         window: 120s
       replicas: 1
       labels:
-        - traefik.frontend.rule=Host:mqtt.${BASE_HOST}
-        - traefik.port=9001
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-        - traefik.tags=traefik-public
-        - traefik.webservice.frontend.entryPoints=https
+        - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${BASE_HOST}`)"
+        - "traefik.http.routers.mosquitto.entrypoints=websecure"
+        - "traefik.http.routers.mosquitto.tls.certresolver=le"
+        - "traefik.http.routers.mosquitto.middlewares=whitelist"
+        - "traefik.http.services.mosquitto.loadbalancer.server.port=9001"
+        - "traefik.http.services.mosquitto.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
     ports:
       - 1883:1883
     networks:
@@ -70,36 +70,15 @@ services:
       - /docker/mosquitto:/mosquitto
     image: "eclipse-mosquitto:1.6"
 
-  chromecompanion:
-    image: registry.${BASE_HOST}/chromecompanion:latest
-    volumes:
-      - /docker/chromecompanion:/xml
-    networks:
-      - mqtt
-      - traefik-public
-    command: -d --xmltv /xml -H mqtt --host https://chrome.${BASE_HOST}
-    deploy:
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      replicas: 1
-      labels:
-        - traefik.frontend.rule=Host:chrome.${BASE_HOST}
-        - traefik.port=8181
-        - traefik.docker.network=traefik-public
-        - traefik.enable=true
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-        - traefik.tags=traefik-public
-        - traefik.webservice.frontend.entryPoints=https
-
   dashboard:
-    image: registry.${BASE_HOST}/dashboard:latest
+    depends_on:
+      - mqtt
+      - nodered
+    image: registry.${BASE_HOST}/dashboard
     networks:
       - traefik-public
+    volumes:
+      - /docker/dashboard:/data
     deploy:
       restart_policy:
         condition: any
@@ -108,15 +87,14 @@ services:
         window: 120s
       replicas: 1
       labels:
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-        - traefik.tags=traefik-public
-        - traefik.webservice.frontend.entryPoints=https
-        - traefik.port=80
-        - traefik.frontend.rule=Host:dashboard.${BASE_HOST}
+        - "traefik.http.routers.dashboard.rule=Host(`dashboard.${BASE_HOST}`)"
+        - "traefik.http.routers.dashboard.entrypoints=websecure"
+        - "traefik.http.routers.dashboard.tls.certresolver=le"
+        - "traefik.http.routers.dashboard.middlewares=whitelist"
+        - "traefik.http.services.dashboard.loadbalancer.server.port=5000"
+        - "traefik.http.services.dashboard.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
 
 ### Habridge, roku, and chromecast is moved to a rpi in IOT vlan, but kept here
 ### as a reference.

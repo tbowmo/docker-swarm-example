@@ -41,7 +41,14 @@ docker stack deploy -c registry.yml registry
 docker stack deploy -c traefik.yml traefik
 
 echo sleeping 5s before continuing
-sleep 5s
+sleep 2s
+
+REGISTRY_RUNNING=(`docker service ps registry_registry --format '{{.CurrentState}}' |grep Running | wc -l`)
+while [ $REGISTRY_RUNNING -lt "1" ]
+do
+	echo "Waiting for registry running $REGISTRY_RUNNING"
+	REGISTRY_RUNNING=(`docker service ps registry_registry --format '{{.CurrentState}}' |grep Running | wc -l`)
+done
 
 echo Now start the rest of the stacks in this directory
 

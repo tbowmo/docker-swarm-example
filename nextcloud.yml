@@ -32,7 +32,9 @@ services:
           - node.labels.storage==yes
       replicas: 1
 
-  app:  
+  app:
+    depends_on:
+      - mariadb
     image: nextcloud
     volumes:
       - /glusterfs/nextcloud/:/var/www/html
@@ -48,14 +50,20 @@ services:
           - node.labels.storage==yes
       replicas: 1
       labels:
-        - traefik.docker.network=traefik-public
         - traefik.enable=true
-        - traefik.frontend.entryPoints=http,https
-        - traefik.frontend.redirect.entryPoint=https
-        - traefik.frontend.rule=Host:nextcloud.${BASE_HOST}
-        - traefik.frontend.headers.customResponseHeaders=Strict-Transport-Security:15552000
-        - traefik.protocol=http
-        - traefik.port=80
+        - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.${BASE_HOST}`)"
+        - "traefik.http.routers.nextcloud.entrypoints=websecure"
+        - "traefik.http.routers.nextcloud.tls.certresolver=le"
+        - traefik.http.services.nextcloud.loadbalancer.server.port=80
+
+        # - traefik.docker.network=traefik-public
+        # - traefik.enable=true
+        # - traefik.frontend.entryPoints=http,https
+        # - traefik.frontend.redirect.entryPoint=https
+        # - traefik.frontend.rule=Host:nextcloud.${BASE_HOST}
+        # - traefik.frontend.headers.customResponseHeaders=Strict-Transport-Security:15552000
+        # - traefik.protocol=http
+        # - traefik.port=80
     networks:
       - traefik-public
       - nextcloud
