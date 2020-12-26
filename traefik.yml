@@ -16,6 +16,12 @@ services:
       --api
       --log.level="DEBUG"
       --serverstransport.insecureskipverify
+      --metrics.influxdb=true
+      --metrics.influxdb.address=influx:8086
+      --metrics.influxdb.protocol=http
+      --metrics.influxdb.database=traefik
+      --metrics.influxdb.username=traefik
+      --metrics.influxdb.password=traefik
     deploy:
       restart_policy:
         condition: any
@@ -42,7 +48,7 @@ services:
         - "traefik.http.routers.api.service=api@internal"
         - "traefik.http.routers.api.middlewares=whitelist"
         - "traefik.http.routers.api.tls.certresolver=le"
-        - traefik.http.services.api.loadbalancer.server.port=8080
+        - "traefik.http.services.api.loadbalancer.server.port=8080"
         - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
         - "traefik.http.middlewares.myAuth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/"
     ports:
@@ -57,6 +63,7 @@ services:
       - 8383:8080
     networks:
       - traefik-public
+      - grafing
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /docker/traefik/acme-v2.1.json:/acme.json
@@ -64,3 +71,6 @@ services:
 networks:
   traefik-public:
     external: true
+  grafing:
+    external: true
+

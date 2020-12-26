@@ -32,7 +32,9 @@ services:
           - node.labels.storage==yes
       replicas: 1
 
-  app:  
+  app:
+    depends_on:
+      - mariadb
     image: nextcloud
     volumes:
       - /glusterfs/nextcloud/:/var/www/html
@@ -49,10 +51,10 @@ services:
       replicas: 1
       labels:
         - traefik.enable=true
-        - "traefik.http.routers.nextclout.rule=Host(`nextcloud.${BASE_HOST}`)"
-        - "traefik.http.routers.nextclout.entrypoints=websecure"
-        - "traefik.http.routers.nextclout.tls.certresolver=le"
-        - traefik.http.services.nextclout.loadbalancer.server.port=80
+        - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.${BASE_HOST}`)"
+        - "traefik.http.routers.nextcloud.entrypoints=websecure"
+        - "traefik.http.routers.nextcloud.tls.certresolver=le"
+        - traefik.http.services.nextcloud.loadbalancer.server.port=80
 
         # - traefik.docker.network=traefik-public
         # - traefik.enable=true

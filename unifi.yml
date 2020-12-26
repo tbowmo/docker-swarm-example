@@ -19,27 +19,26 @@ services:
           - node.labels.storage==yes
       labels:
         - traefik.enable=true
-        - "traefik.http.routers.controller.rule=Host(`unifi.${BASE_HOST}`)"
-        - "traefik.http.routers.controller.entrypoints=websecure"
-        - "traefik.http.routers.controller.tls.certresolver=le"
-        - "traefik.http.routers.controller.middlewares=whitelist"
-        - "traefik.http.services.controller.loadbalancer.server.port=8443"
-        - "traefik.http.services.controller.loadbalancer.server.scheme=https"
-        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+        - "traefik.http.routers.unifi.rule=Host(`unifi.${BASE_HOST}`)"
+        - "traefik.http.routers.unifi.entrypoints=websecure"
+        - "traefik.http.routers.unifi.tls.certresolver=le"
+        - "traefik.http.routers.unifi.middlewares=unifiwhitelist"
+        - "traefik.http.routers.unifi.service=unifi"
+        - "traefik.http.services.unifi.loadbalancer.server.port=8443"
+        - "traefik.http.services.unifi.loadbalancer.server.scheme=https"
+        - "traefik.http.middlewares.unifiwhitelist.ipwhitelist.sourcerange=192.168.0.0/16"
 
-        # - traefik.docker.network=traefik-public
-        # - traefik.enable=true
-        # - traefik.protocol=https
-        # - traefik.frontend.entryPoints=http,https
-        # - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-        # - traefik.controller.port=8443
-        # - traefik.controller.frontend.redirect.entryPoint=https
-        # - traefik.controller.frontend.rule=Host:unifi.${BASE_HOST}
-        # - traefik.hotspot.port=8843
-        # - traefik.hotspot.frontend.redirect.entryPoint=https
-        # - traefik.hotspot.frontend.rule=Host:hotspot.${BASE_HOST}
+        - "traefik.http.routers.hotspot.rule=Host(`hotspot.${BASE_HOST}`)"
+        - "traefik.http.routers.hotspot.entrypoints=websecure"
+        - "traefik.http.routers.hotspot.tls.certresolver=le"
+        - "traefik.http.routers.hotspot.middlewares=hotspotwhitelist"
+        - "traefik.http.routers.hotspot.service=hotspot"
+        - "traefik.http.services.hotspot.loadbalancer.server.port=443"
+        - "traefik.http.services.hotspot.loadbalancer.server.scheme=https"
+        - "traefik.http.middlewares.hotspotwhitelist.ipwhitelist.sourcerange=10.10.10.0/24"
     ports:
       - 8080:8080
+      - 8443:8443
       - 3478:3478/udp
       - 6789:6789
       - 10001:10001/udp

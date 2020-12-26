@@ -28,8 +28,11 @@ services:
           - node.labels.storage==yes
     ports:
       - 25826:25826/udp
+      - 8086:8086/tcp
 
   grafana:
+    depends_on:
+      - influx
     volumes:
       - /docker/grafana:/var/lib/grafana
       - /docker/grafana:/var/log/grafana
@@ -49,7 +52,6 @@ services:
         - "traefik.http.routers.graphana.rule=Host(`graph.${BASE_HOST}`)"
         - "traefik.http.routers.graphana.entrypoints=websecure"
         - "traefik.http.routers.graphana.tls.certresolver=le"
-        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/24"
         - traefik.http.services.graphana.loadbalancer.server.port=3000
         # - traefik.frontend.rule=Host:graph.${BASE_HOST}
         # - traefik.port=3000

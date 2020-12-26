@@ -5,8 +5,14 @@ services:
     image: registry:latest
     networks:
       - traefik-public
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: BowmoRealm
+      REGISTRY_HTTP_SECRET: /auth/secret
     volumes:
-      - registry-volume:/var/lib/registry
+      - /glusterfs/registry:/var/lib/registry
+      - /docker/registry/:/auth
     deploy:
       restart_policy:
         condition: any
@@ -19,11 +25,13 @@ services:
       replicas: 1
       labels:
         - traefik.enable=true
-        - "traefik.http.routers.registry.rule=Host(`portainer.${BASE_HOST}`)"
+        - "traefik.http.routers.registry.rule=Host(`registry.${BASE_HOST}`)"
         - "traefik.http.routers.registry.entrypoints=websecure"
         - "traefik.http.routers.registry.tls.certresolver=le"
+#        - "traefik.http.routers.registry.middlewares=whitelist"
         - "traefik.http.services.registry.loadbalancer.server.port=5000"
         - "traefik.http.services.registry.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
 
         # - traefik.enable=true
         # - traefik.docker.network=traefik-public
@@ -35,7 +43,4 @@ services:
 networks:
   traefik-public:
     external: true
-
-volumes:
-  registry-volume:
   
