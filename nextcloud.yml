@@ -11,7 +11,7 @@ volumes:
 
 services:
   mariadb:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:latest
     volumes:
       - /glusterfs/nextcloud-db:/config
     environment:
@@ -35,7 +35,7 @@ services:
   app:
     depends_on:
       - mariadb
-    image: nextcloud
+    image: nextcloud:21.0
     volumes:
       - /glusterfs/nextcloud/:/var/www/html
       - /mnt/data/nextcloud-data/:/data
