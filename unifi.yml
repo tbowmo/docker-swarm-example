@@ -44,8 +44,29 @@ services:
       - 10001:10001/udp
       - 1900:1900/udp            
 
+  unpoller:
+    image: golift/unifi-poller:latest
+    networks:
+      - grafing
+    depends_on:
+      - unifi
+    volumes:
+      - /docker/unpoller:/etc/unifi-poller/
+    environment:
+      UP_UNIFI_DEFAULT_URL: "https://unifi:8443"
+      UP_UNIFI_DEFAULT_USER: "backend"
+      UP_UNIFI_DEFAULT_SAVE_SITES: "true"
+      UP_UNIFI_DEFAULT_PASS: "TdAuvbz7LOMGNgex3Xn8"
+      UP_UNIFI_DEFAULT_SITE_0: "default"
+      UP_INFLUXDB_URL: "http://influxdb:8086"
+      UP_INFLUXDB_DB: "unifi"
+      UP_INFLUXDB_USER: "unifi"
+      UP_INFLUXDB_PASS: "unifi"
+      
 networks:
   traefik-public:
     external: true
   swarm-macvlan1:
+    external: true
+  grafing:
     external: true

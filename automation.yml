@@ -6,13 +6,13 @@ networks:
     external: true
   grafing:
     external: true
-  mqtt:
-    external: true
+  # mqtt:
+  #   external: true
 
 services:
   nodered:
-    depends_on: 
-      - mqtt
+    # depends_on: 
+      # - mqtt
     deploy:
       restart_policy:
         condition: any
@@ -33,7 +33,7 @@ services:
         - "traefik.http.services.node.loadbalancer.server.port=1880"
         - "traefik.http.services.node.loadbalancer.server.scheme=http"
         - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-    image: "nodered/node-red:1.1.2"
+    image: "nodered/node-red:1.3.4"
     volumes:
       - /docker/nodered:/data
       - /etc/localtime:/etc/localtime:ro
@@ -42,38 +42,40 @@ services:
       - homeautomation
       - traefik-public
       - grafing
+    environment:
+      - TZ=Europe/Copenhagen
 
-  mqtt:
-    deploy:
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      replicas: 1
-      labels:
-        - traefik.enable=true
-        - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${BASE_HOST}`)"
-        - "traefik.http.routers.mosquitto.entrypoints=websecure"
-        - "traefik.http.routers.mosquitto.tls.certresolver=le"
-        - "traefik.http.routers.mosquitto.middlewares=whitelist"
-        - "traefik.http.services.mosquitto.loadbalancer.server.port=9001"
-        - "traefik.http.services.mosquitto.loadbalancer.server.scheme=http"
-        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-    ports:
-      - 1883:1883
-    networks:
-      - homeautomation
-      - traefik-public
-      - mqtt
-    volumes:
-      - /docker/mosquitto:/mosquitto
-    image: "eclipse-mosquitto:1.6"
+  # mqtt:
+  #   deploy:
+  #     restart_policy:
+  #       condition: any
+  #       delay: 5s
+  #       max_attempts: 3
+  #       window: 120s
+  #     replicas: 1
+  #     labels:
+  #       - traefik.enable=no
+  #       - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${BASE_HOST}`)"
+  #       - "traefik.http.routers.mosquitto.entrypoints=websecure"
+  #       - "traefik.http.routers.mosquitto.tls.certresolver=le"
+  #       - "traefik.http.routers.mosquitto.middlewares=whitelist"
+  #       - "traefik.http.services.mosquitto.loadbalancer.server.port=9001"
+  #       - "traefik.http.services.mosquitto.loadbalancer.server.scheme=http"
+  #       - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+  #   ports:
+  #     - 1883:1883
+  #   networks:
+  #     - homeautomation
+  #     - traefik-public
+  #     - mqtt
+  #   volumes:
+  #     - /docker/mosquitto:/mosquitto
+  #   image: "eclipse-mosquitto:1.6"
 
   dashboard:
-    depends_on:
-      - mqtt
-      - nodered
+    # depends_on:
+      # - mqtt
+      # - nodered
     image: registry.${BASE_HOST}/dashboard
     networks:
       - traefik-public
@@ -172,3 +174,34 @@ services:
 #         - traefik.port=8181
 #         - traefik.webservice.frontend.entryPoints=https
 #
+
+#  homeassistant:
+#    image: homeassistant/home-assistant:stable
+#    volumes:
+#      - /docker/homeassistant:/config
+#    environment:
+#      - TZ=Europe/Copenhagen
+#    ports:
+#      - 8123:8123
+#    deploy:
+#      restart_policy:
+#        condition: any
+#        delay: 5s
+#        max_attempts: 3
+#        window: 120s
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#      replicas: 1
+#      labels:
+#        - traefik.enable=true
+#        - "traefik.http.routers.hass.rule=Host(`hass.${BASE_HOST}`)"
+#        - "traefik.http.routers.hass.entrypoints=websecure"
+#        - "traefik.http.routers.hass.tls.certresolver=le"
+#        - "traefik.http.routers.hass.middlewares=whitelist"
+#        - "traefik.http.services.hass.loadbalancer.server.port=8123"
+#        - "traefik.http.services.hass.loadbalancer.server.scheme=http"
+#        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+#    networks:
+#      - homeautomation
+#      - traefik-public

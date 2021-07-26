@@ -1,4 +1,4 @@
-version: '3.2'
+version: '3.8'
 
 services:
   db:
@@ -27,28 +27,48 @@ services:
         constraints:
           - node.labels.storage==yes
 
+  mlapi:
+    image: registry.${BASE_HOST}/mlapi:latest
+    networks:
+      - zoneminder
+    volumes:
+      - /docker/zoneminder/etc:/etc/zm
+      - /mnt/sdd/zoneminder/models:/var/lib/zmeventnotification/models
+      - /mnt/sdd/zoneminder/images:/var/lib/zmeventnotification/images
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      replicas: 1
+
   web:
     depends_on:
       - db
-    image: quantumobject/docker-zoneminder
+      - mlapi
+    image: registry.${BASE_HOST}/zoneminder:test
     networks:
       - traefik-public
       - zoneminder
-    ports:
-      - "8081:80" #So I can access it on internal network on a shared host
     volumes:
       - /var/empty
       - /mnt/sdd/zoneminder/backups:/var/backups
       - /mnt/sdd/zoneminder/cache:/var/cache/zoneminder
+      - /mnt/sdd/zoneminder/logs:/var/log/zm
+      - /docker/zoneminder/etc:/etc/zm
+      - /docker/zoneminder/config:/config
+      - /mnt/sdd/zoneminder/models:/var/lib/zmeventnotification/models
+      - /mnt/sdd/zoneminder/images:/var/lib/zmeventnotification/images
       - type: tmpfs
         target: /dev/shm
     environment:
      - TZ=Europe/Copenhagen
      - ZM_DB_HOST=db
      - ZM_TIMEZONE=Europe/Copenhagen
-
-    depends_on:
-      - db
     deploy:
       restart_policy:
         condition: any
@@ -65,12 +85,18 @@ services:
         - "traefik.http.routers.zm.rule=Host(`zm.${BASE_HOST}`)"
         - "traefik.http.routers.zm.entrypoints=websecure"
         - "traefik.http.routers.zm.tls.certresolver=le"
-#        - "traefik.http.routers.zm.middlewares=addzm"
-        - "traefik.http.services.zm.loadbalancer.server.port=80"
-        - "traefik.http.services.zm.loadbalancer.server.scheme=http"
-        - "traefik.http.middlewares.auth.basicauth.users=${USER_ZONEMINDER}"
-        - "traefik.http.middlewares.addzm.addprefix.prefix=/zm"
-
+        - "traefik.http.routers.zm.service=zm-web"
+        - "traefik.http.routers.zm.middlewares=zm-redir"
+        - "traefik.http.services.zm-web.loadbalancer.server.port=80"
+        - "traefik.http.services.zm-web.loadbalancer.server.scheme=http"
+        - "traefik.http.routers.zmes.rule=Host(`zmes.${BASE_HOST}`)"
+        - "traefik.http.routers.zmes.entrypoints=websecure"
+        - "traefik.http.routers.zmes.tls.certresolver=le"
+        - "traefik.http.routers.zmes.service=zmes"
+        - "traefik.http.services.zmes.loadbalancer.server.port=9000"
+        - "traefik.http.services.zmes.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.zm-redir.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
+        - "traefik.http.middlewares.zm-redir.redirectregex.replacement=https://$$1/zm"
 networks:
   traefik-public:
     external: true

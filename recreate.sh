@@ -59,6 +59,6 @@ do
 	if  [ "$stack" != "registry" ] && [ "$stack" != "traefik" ]
 	then
 		echo $stack
-		docker stack deploy -c $f $stack
+		docker stack deploy -c $f $stack --with-registry-auth
 	fi	
 done

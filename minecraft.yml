@@ -1,29 +1,31 @@
 version: '3.3'
 
 services:
-#  vanilla:
-#    image: itzg/minecraft-server
-#    ports:
-#      - 25565:25565
-#    volumes:
-#      - /docker/minecraft-vanilla:/data
-#    deploy:
-#      placement:
-#        constraints:
-#          - node.labels.storage==yes
-#    environment:
-#      EULA: "TRUE"
-#      ENABLE_RCON: "true"
-#      RCON_PASSWORD: "minecraft"
-#      RCON_PORT: 25575
-#      VERISON: "LATEST"
+  vanilla:
+    image: itzg/minecraft-server:java16
+    ports:
+      - 25565:25565
+    volumes:
+      - /glusterfs/minecraft/vanilla:/data
+    deploy:
+      placement:
+        constraints:
+          - node.labels.storage==yes
+    environment:
+      EULA: "TRUE"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "minecraft"
+      RCON_PORT: 25575
+      VERISON: "LATEST"
+      MEMORY: 2048M
+      ENABLE_AUTOPAUSE: "TRUE"
 
 #  skyfactory4:
 #    image: itzg/minecraft-server
 #    ports:
 #      - 25566:25565
 #    volumes:
-#      - /docker/minecraft-skyfactory4:/data
+#      - /glusterfs/minecraft/skyfactory4:/data
 #    deploy:
 #      placement:
 #        constraints:
@@ -38,12 +40,12 @@ services:
 #      MEMORY: 4G
 #      FORGEVERSION: "14.23.5.2838"
 
-  trollcraft:
-    image: itzg/minecraft-server
+  pixelmon:
+    image: itzg/minecraft-server:java8
     ports:
       - 25567:25565
     volumes:
-      - /docker/minecraft-trollcraft:/data
+      - /glusterfs/minecraft/pixelmon:/data
     deploy:
       placement:
         constraints:
@@ -54,9 +56,9 @@ services:
       RCON_PASSWORD: "minecraft"
       RCON_PORT: 25575
       TYPE: "FORGE"
-      VERSION: "1.7.102"
+      VERSION: "1.12.2"
       MEMORY: 4G
-      FORGEVERSION: "10.13.4.1614"
+      FORGEVERSION: "14.23.5.2855"
  
 
     
