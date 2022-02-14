@@ -28,6 +28,9 @@ services:
           - node.labels.storage==yes
 
   mlapi:
+    depends_on:
+      - web
+      - db
     image: registry.${BASE_HOST}/mlapi:latest
     networks:
       - zoneminder
@@ -49,7 +52,6 @@ services:
   web:
     depends_on:
       - db
-      - mlapi
     image: registry.${BASE_HOST}/zoneminder:test
     networks:
       - traefik-public

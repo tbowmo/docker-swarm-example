@@ -35,7 +35,7 @@ services:
   app:
     depends_on:
       - mariadb
-    image: nextcloud:21.0
+    image: nextcloud:23
     volumes:
       - /glusterfs/nextcloud/:/var/www/html
       - /mnt/data/nextcloud-data/:/data

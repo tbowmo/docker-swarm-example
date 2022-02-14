@@ -33,7 +33,7 @@ services:
         - "traefik.http.services.node.loadbalancer.server.port=1880"
         - "traefik.http.services.node.loadbalancer.server.scheme=http"
         - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-    image: "nodered/node-red:1.3.4"
+    image: "nodered/node-red:2.0.6"
     volumes:
       - /docker/nodered:/data
       - /etc/localtime:/etc/localtime:ro

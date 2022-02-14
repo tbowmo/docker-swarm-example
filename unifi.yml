@@ -1,11 +1,21 @@
 version: '3.3'
 
+networks:
+  traefik-public:
+    external: true
+  swarm-macvlan1:
+    external: true
+  grafing:
+    external: true
+
 services:
-  unifi:
+  controller:
     image: jacobalberty/unifi:latest
     networks:
       - swarm-macvlan1
       - traefik-public
+      - default
+      - grafing
     environment:
       TZ: "Europe/Copenhagen"
       UNIFI_UID: 2000
@@ -48,25 +58,8 @@ services:
     image: golift/unifi-poller:latest
     networks:
       - grafing
+      - default
     depends_on:
-      - unifi
+      - controller
     volumes:
-      - /docker/unpoller:/etc/unifi-poller/
-    environment:
-      UP_UNIFI_DEFAULT_URL: "https://unifi:8443"
-      UP_UNIFI_DEFAULT_USER: "backend"
-      UP_UNIFI_DEFAULT_SAVE_SITES: "true"
-      UP_UNIFI_DEFAULT_PASS: "TdAuvbz7LOMGNgex3Xn8"
-      UP_UNIFI_DEFAULT_SITE_0: "default"
-      UP_INFLUXDB_URL: "http://influxdb:8086"
-      UP_INFLUXDB_DB: "unifi"
-      UP_INFLUXDB_USER: "unifi"
-      UP_INFLUXDB_PASS: "unifi"
-      
-networks:
-  traefik-public:
-    external: true
-  swarm-macvlan1:
-    external: true
-  grafing:
-    external: true
+      - /docker/unpoller:/config

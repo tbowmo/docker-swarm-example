@@ -8,7 +8,7 @@ networks:
 
 services:
   influx:
-    image: influxdb:1.6.1
+    image: influxdb:1.8
     networks:
       - grafing
     volumes:
@@ -40,6 +40,8 @@ services:
       - grafing
       - traefik-public
     image: "grafana/grafana"
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,natel-discrete-panel,grafana-clock-panel
     deploy:
       restart_policy:
         condition: any

@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   vanilla:
-    image: itzg/minecraft-server:java16
+    image: itzg/minecraft-server:java17
     ports:
       - 25565:25565
     volumes:
@@ -16,9 +16,9 @@ services:
       ENABLE_RCON: "true"
       RCON_PASSWORD: "minecraft"
       RCON_PORT: 25575
-      VERISON: "LATEST"
-      MEMORY: 2048M
-      ENABLE_AUTOPAUSE: "TRUE"
+      VERSION: "LATEST"
+      MEMORY: 3G
+      ENABLE_AUTOPAUSE: "FALSE"
 
 #  skyfactory4:
 #    image: itzg/minecraft-server
@@ -40,25 +40,43 @@ services:
 #      MEMORY: 4G
 #      FORGEVERSION: "14.23.5.2838"
 
-  pixelmon:
-    image: itzg/minecraft-server:java8
-    ports:
-      - 25567:25565
-    volumes:
-      - /glusterfs/minecraft/pixelmon:/data
-    deploy:
-      placement:
-        constraints:
-          - node.labels.storage==yes
-    environment:
-      EULA: "TRUE"
-      ENABLE_RCON: "true"
-      RCON_PASSWORD: "minecraft"
-      RCON_PORT: 25575
-      TYPE: "FORGE"
-      VERSION: "1.12.2"
-      MEMORY: 4G
-      FORGEVERSION: "14.23.5.2855"
- 
-
-    
+#  pixelmon:
+#    image: itzg/minecraft-server:java8
+#    ports:
+#      - 25567:25565
+#    volumes:
+#      - /glusterfs/minecraft/pixelmon:/data
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#    environment:
+#      EULA: "TRUE"
+#      ENABLE_RCON: "true"
+#      RCON_PASSWORD: "minecraft"
+#      RCON_PORT: 25575
+#      TYPE: "FORGE"
+#      VERSION: "1.12.2"
+#      MEMORY: 4G
+#      FORGEVERSION: "14.23.5.2855"
+#
+#  cavefactory:
+#    image: itzg/minecraft-server:java8
+#    ports:
+#      - 25568:25565
+#    volumes:
+#      - /glusterfs/minecraft/cavefactory:/data
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.storage==yes
+#    environment:
+#      EULA: "TRUE"
+#      ENABLE_RCON: "true"
+#      RCON_PASSWORD: "minecraft"
+#      RCON_PORT: 25575
+#      TYPE: "CURSEFORGE"
+#      MEMORY: 4G
+#      CF_SERVER_MOD: Cave+Factory+-+dev_server_pack.zip
+#      VERSION: "1.16.5"
+#      USE_MODPACK_START_SCRIPT: "false"
