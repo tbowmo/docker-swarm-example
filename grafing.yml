@@ -39,9 +39,11 @@ services:
     networks:
       - grafing
       - traefik-public
-    image: "grafana/grafana"
-    environment:
-      GF_INSTALL_PLUGINS: grafana-piechart-panel,natel-discrete-panel,grafana-clock-panel
+    image: registry.juletraesfoden.dk/grafana-custom:latest
+#    image: "grafana/grafana"
+#    environment:
+#      GF_INSTALL_PLUGINS: grafana-clock-panel 2.0.0
+#      GF_INSTALL_PLUGINS: grafana-piechart-panel,natel-discrete-panel,grafana-clock-panel
     deploy:
       restart_policy:
         condition: any

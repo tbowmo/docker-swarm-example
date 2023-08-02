@@ -6,13 +6,9 @@ networks:
     external: true
   grafing:
     external: true
-  # mqtt:
-  #   external: true
 
 services:
   nodered:
-    # depends_on: 
-      # - mqtt
     deploy:
       restart_policy:
         condition: any
@@ -33,7 +29,7 @@ services:
         - "traefik.http.services.node.loadbalancer.server.port=1880"
         - "traefik.http.services.node.loadbalancer.server.scheme=http"
         - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-    image: "nodered/node-red:2.0.6"
+    image: "nodered/node-red:3.0.2"
     volumes:
       - /docker/nodered:/data
       - /etc/localtime:/etc/localtime:ro
@@ -45,42 +41,19 @@ services:
     environment:
       - TZ=Europe/Copenhagen
 
-  # mqtt:
-  #   deploy:
-  #     restart_policy:
-  #       condition: any
-  #       delay: 5s
-  #       max_attempts: 3
-  #       window: 120s
-  #     replicas: 1
-  #     labels:
-  #       - traefik.enable=no
-  #       - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${BASE_HOST}`)"
-  #       - "traefik.http.routers.mosquitto.entrypoints=websecure"
-  #       - "traefik.http.routers.mosquitto.tls.certresolver=le"
-  #       - "traefik.http.routers.mosquitto.middlewares=whitelist"
-  #       - "traefik.http.services.mosquitto.loadbalancer.server.port=9001"
-  #       - "traefik.http.services.mosquitto.loadbalancer.server.scheme=http"
-  #       - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-  #   ports:
-  #     - 1883:1883
-  #   networks:
-  #     - homeautomation
-  #     - traefik-public
-  #     - mqtt
-  #   volumes:
-  #     - /docker/mosquitto:/mosquitto
-  #   image: "eclipse-mosquitto:1.6"
-
   dashboard:
-    # depends_on:
-      # - mqtt
-      # - nodered
+    depends_on:
+      - nodered
     image: registry.${BASE_HOST}/dashboard
+    container_name: dashboard
     networks:
       - traefik-public
     volumes:
       - /docker/dashboard:/data
+    environment:
+      - BACKEND_MQTT_HOST=mqtt://192.168.3.117
+      - BACKEND_OW_KEY=dd93eaf80283929292eac2c8da98e8ce
+      - BACKEND_OW_CITYID=2620952
     deploy:
       restart_policy:
         condition: any
@@ -98,110 +71,9 @@ services:
         - "traefik.http.services.dashboard.loadbalancer.server.scheme=http"
         - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
 
-### Habridge, roku, and chromecast is moved to a rpi in IOT vlan, but kept here
-### as a reference.
-#
-#  habridge:
-#    image: "linuxserver/habridge"
-#    deploy:
-#      restart_policy:
-#        condition: any
-#        delay: 5s
-#        max_attempts: 3
-#        window: 120s
-#      placement:
-#        constraints:
-#          - node.labels.mysensors==yes
-#      replicas: 1
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
-#      - TZ=Europe/Copenhagen
-##      - SEC_KEY=123SecureKey
-#    networks:
-#      - swarm-macvlan30
-#      - homeautomation
-#    ports:
-#      - 88:8080
-##      - 50000:50000
-#    volumes:
-#      - /docker/habridge/:/config:rw
-#      - /etc/localtime:/etc/localtime:ro 
-  
-#  roku:
-#    image: registry.${BASE_HOST}/roku-dummy:latest
-#    environment:
-#      - MQTT_HOST=jarvis 
-#    networks:
-#      - swarm-macvlan30
-#    deploy:
-#      restart_policy:
-#        condition: any
-#        delay: 5s
-#        max_attempts: 3
-#        window: 120s
-#      placement:
-#        constraints:
-#          - node.labels.mysensors == yes
-#
-#   chromecast:
-#     image: registry.${BASE_HOST}/chromecast:latest
-#     volumes:
-#       - /docker/chromecast:/config
-#     networks:
-# #      - swarm-macvlan30
-#       - homeautomation
-#       - traefik-public
-#     environment:
-#       - MQTT_HOST=mqtt
-#       - MQTT_ROOT=chromedocker
-#       - CORS_HOST=https://dashboard.${BASE_HOST}
-#     deploy:
-#       restart_policy:
-#         condition: any
-#         delay: 5s
-#         max_attempts: 3
-#         window: 120s
-#       replicas: 1
-#       labels:
-#         - traefik.docker.network=traefik-public
-#         - traefik.enable=true
-#         - traefik.frontend.rule=Host:chrome.${BASE_HOST}
-#         - traefik.redirectorservice.frontend.entryPoints=http
-#         - traefik.redirectorservice.frontend.redirect.entryPoint=https
-#         - traefik.frontend.whiteList.sourceRange=${ALLOW_LAN}
-#         - traefik.tags=traefik-public
-#         - traefik.port=8181
-#         - traefik.webservice.frontend.entryPoints=https
-#
-
-#  homeassistant:
-#    image: homeassistant/home-assistant:stable
-#    volumes:
-#      - /docker/homeassistant:/config
-#    environment:
-#      - TZ=Europe/Copenhagen
-#    ports:
-#      - 8123:8123
-#    deploy:
-#      restart_policy:
-#        condition: any
-#        delay: 5s
-#        max_attempts: 3
-#        window: 120s
-#      placement:
-#        constraints:
-#          - node.labels.storage==yes
-#      replicas: 1
-#      labels:
-#        - traefik.enable=true
-#        - "traefik.http.routers.hass.rule=Host(`hass.${BASE_HOST}`)"
-#        - "traefik.http.routers.hass.entrypoints=websecure"
-#        - "traefik.http.routers.hass.tls.certresolver=le"
-#        - "traefik.http.routers.hass.middlewares=whitelist"
-#        - "traefik.http.services.hass.loadbalancer.server.port=8123"
-#        - "traefik.http.services.hass.loadbalancer.server.scheme=http"
-#        - "traefik.http.middlewares.whitelist.ipwhitelist.sourcerange=192.168.0.0/16"
-#    networks:
-#      - homeautomation
-#      - traefik-public
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 dashboard

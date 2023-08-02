@@ -10,12 +10,13 @@ networks:
 
 services:
   controller:
-    image: jacobalberty/unifi:latest
+    image: jacobalberty/unifi:v7.2
     networks:
-      - swarm-macvlan1
-      - traefik-public
-      - default
-      - grafing
+      "swarm-macvlan1":
+        ipv4_address: 192.168.1.88
+      traefik-public:
+      default:
+      grafing:
     environment:
       TZ: "Europe/Copenhagen"
       UNIFI_UID: 2000
@@ -54,12 +55,13 @@ services:
       - 10001:10001/udp
       - 1900:1900/udp            
 
-  unpoller:
-    image: golift/unifi-poller:latest
-    networks:
-      - grafing
-      - default
-    depends_on:
-      - controller
-    volumes:
-      - /docker/unpoller:/config
+
+#  unpoller:
+#    image: golift/unifi-poller:latest
+#    networks:
+#      - grafing
+#      - default
+#    depends_on:
+#      - controller
+#    volumes:
+#      - /docker/unpoller:/config

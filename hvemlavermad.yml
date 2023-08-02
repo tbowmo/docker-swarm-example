@@ -1,0 +1,25 @@
+version: '3.3'
+
+networks:
+  traefik-public:
+    external: true
+
+services:
+  hevmlavermad:
+    image: registry.${BASE_HOST}/hvemlavermad:latest
+    networks:
+      - traefik-public
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - "traefik.http.routers.hvemlavermad.rule=Host(`hvemlavermad.${BASE_HOST}`)"
+        - "traefik.http.routers.hvemlavermad.entrypoints=websecure"
+        - "traefik.http.routers.hvemlavermad.tls.certresolver=le"
+        - "traefik.http.services.hvemlavermad.loadbalancer.server.port=5000"
+        - "traefik.http.services.hvemlavermad.loadbalancer.server.scheme=http"

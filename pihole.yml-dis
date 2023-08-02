@@ -1,0 +1,48 @@
+networks:
+  traefik-public:
+    external: true
+  swarm-macvlan1:
+    external: true
+  grafing:
+    external: true
+
+services:
+  pihole:
+  # https://github.com/pi-hole/docker-pi-hole/blob/master/README.md
+    image: pihole/pihole:latest
+    networks:
+      "swarm-macvlan1":
+        ipv4_address: 192.168.1.89
+      traefik-public:
+      default:
+    deploy:
+      placement:
+        constraints:
+          - node.labels.storage==yes
+      labels:
+        - traefik.enable=true
+        - "traefik.http.routers.pihole.rule=Host(`pihole.${BASE_HOST}`)"
+        - "traefik.http.routers.pihole.entrypoints=websecure"
+        - "traefik.http.routers.pihole.tls.certresolver=le"
+        - "traefik.http.routers.pihole.middlewares=piholewhitelist"
+        - "traefik.http.routers.pihole.service=pihole"
+        - "traefik.http.services.pihole.loadbalancer.server.port=80"
+        - "traefik.http.services.pihole.loadbalancer.server.scheme=http"
+        - "traefik.http.middlewares.piholewhitelist.ipwhitelist.sourcerange=192.168.0.0/16"
+    # For DHCP there is some advanced router configuration. Do not use host mode networking or it will conflict with nginx and the unifi-controller
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8053:80/tcp"
+    environment:
+      ServerIP: 192.168.1.89
+      TZ: 'Europe/Copenhagen' #Adjust for your timezone
+      PROXY_LOCATION: pihole
+      VIRTUAL_HOST: pihole.juletraesfoden.dk
+      WEBPASSWORD: 'RANDOM'
+    # Volumes store your data between container upgrades
+    volumes:
+      - /docker/pihole/etc-pihole:/etc/pihole
+      - /docker/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+      # run `touch ./var-log/pihole.log` first unless you like errors
+      - /docker/pihole/var-log/pihole.log:/var/log/pihole.log
